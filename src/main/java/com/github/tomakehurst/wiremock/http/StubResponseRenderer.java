@@ -20,13 +20,18 @@ import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.global.GlobalSettingsHolder;
 import com.google.common.base.Optional;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+
 import static com.github.tomakehurst.wiremock.http.Response.response;
 
 public class StubResponseRenderer implements ResponseRenderer {
-	
+
 	private final FileSource fileSource;
 	private final GlobalSettingsHolder globalSettingsHolder;
 	private final ProxyResponseRenderer proxyResponseRenderer;
+	private final ScriptEngine scriptEngine;
 
     public StubResponseRenderer(FileSource fileSource,
                                 GlobalSettingsHolder globalSettingsHolder,
@@ -34,6 +39,9 @@ public class StubResponseRenderer implements ResponseRenderer {
         this.fileSource = fileSource;
         this.globalSettingsHolder = globalSettingsHolder;
         this.proxyResponseRenderer = proxyResponseRenderer;
+
+		ScriptEngineManager factory = new ScriptEngineManager();
+		scriptEngine = factory.getEngineByName("JavaScript");
     }
 
 	@Override
@@ -41,7 +49,7 @@ public class StubResponseRenderer implements ResponseRenderer {
 		if (!responseDefinition.wasConfigured()) {
 			return Response.notConfigured();
 		}
-		
+
 		addDelayIfSpecifiedGloballyOrIn(responseDefinition);
 		if (responseDefinition.isProxyResponse()) {
 	    	return proxyResponseRenderer.render(responseDefinition);
@@ -49,7 +57,7 @@ public class StubResponseRenderer implements ResponseRenderer {
 	    	return renderDirectly(responseDefinition);
 	    }
 	}
-	
+
 	private Response renderDirectly(ResponseDefinition responseDefinition) {
         Response.Builder responseBuilder = response()
                 .status(responseDefinition.getStatus())
@@ -65,8 +73,14 @@ public class StubResponseRenderer implements ResponseRenderer {
             } else {
                 responseBuilder.body(responseDefinition.getBody());
             }
+		} else if (responseDefinition.specifiesScript()) {
+			scriptEngine.put("request", responseDefinition.getOriginalRequest().getUrl());
+			try {
+				responseBuilder.body(scriptEngine.eval(responseDefinition.getScript()).toString());
+			} catch (ScriptException e) {
+				throw new RuntimeException("You suck at JavaScript. Try again.", e);
+			}
 		}
-
         return responseBuilder.build();
 	}
 	
