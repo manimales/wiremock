@@ -80,7 +80,7 @@ public class StubResponseRenderer implements ResponseRenderer {
 				String javaScript = new String(Base64.decode(responseDefinition.getScript()));
 				responseBuilder.body(scriptEngine.eval(javaScript).toString());
 			} catch (ScriptException e) {
-				throw new RuntimeException("You suck at JavaScript. Try again.", e);
+				throw new RuntimeException("You suck at JavaScript. Try again. Also, it should be base 64 encoded.", e);
 			}
 		}
         return responseBuilder.build();
