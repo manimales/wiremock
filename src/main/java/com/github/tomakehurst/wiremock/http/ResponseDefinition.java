@@ -298,6 +298,13 @@ public class ResponseDefinition {
 		} else if (!bodyFileName.equals(other.bodyFileName)) {
 			return false;
 		}
+		if (script == null) {
+			if (other.script != null) {
+				return false;
+			}
+		} else if (!script.equals(other.script)) {
+			return false;
+		}
 		if (fault != other.fault) {
 			return false;
 		}
@@ -326,13 +333,6 @@ public class ResponseDefinition {
 			return false;
 		}
 		if (wasConfigured != other.wasConfigured) {
-			return false;
-		}
-		if (script == null) {
-			if (other.body != null) {
-				return false;
-			}
-		} else if (!script.equals(body)) {
 			return false;
 		}
 		return true;

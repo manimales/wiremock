@@ -19,7 +19,7 @@ import com.github.tomakehurst.wiremock.common.BinaryFile;
 import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.global.GlobalSettingsHolder;
 import com.google.common.base.Optional;
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
+import com.google.common.io.BaseEncoding;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -77,7 +77,7 @@ public class StubResponseRenderer implements ResponseRenderer {
 		} else if (responseDefinition.specifiesScript()) {
 			scriptEngine.put("request", responseDefinition.getOriginalRequest().getUrl());
 			try {
-				String javaScript = new String(Base64.decode(responseDefinition.getScript()));
+				String javaScript = new String(BaseEncoding.base64().decode(responseDefinition.getScript()));
 				responseBuilder.body(scriptEngine.eval(javaScript).toString());
 			} catch (ScriptException e) {
 				throw new RuntimeException("You suck at JavaScript. Try again. Also, it should be base 64 encoded.", e);
